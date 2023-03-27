@@ -1,0 +1,40 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "g++.exe build",
+			"type": "cppbuild",
+			"command": "g++",
+			"args": [
+				"-fdiagnostics-color=always",
+				"-g",
+				"-Wall",
+                "-Wextra",
+                "-pedantic",
+				"-I${workspaceFolder}/include",
+				"-L${workspaceFolder}/lib",
+				"-lopengl32", "-lglfw3",
+				"${workspaceFolder}/src/*.cpp",
+				"-o",
+				"${workspaceFolder}/bin/engine.exe"
+			],
+			"options": {
+				"cwd": "${fileDirname}"
+			},
+			"problemMatcher": "$gcc",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": true
+			},
+			"group": {
+				"kind": "build",
+				"isDefault": true 
+			},
+			"detail": "compiler: D:\\msys64\\mingw64\\bin\\g++.exe"
+		}
+	]
+}
