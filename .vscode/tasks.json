@@ -15,6 +15,7 @@
 				"-L${workspaceFolder}/lib",
 				"-lopengl32", "-lglfw3",
 				"${workspaceFolder}/src/*.cpp",
+				"${workspaceFolder}/resources/*",
 				"-o",
 				"${workspaceFolder}/bin/engine.exe"
 			],

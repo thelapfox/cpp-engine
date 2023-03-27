@@ -1,6 +1,6 @@
 # cpp-engine
 
-MyGame is a simple game engine written in C++ using OpenGL. It provides a basic framework for creating 3D games, including support for graphics, input, audio, and physics.
+cpp-engine is a simple game engine written in C++ using OpenGL. It provides a basic framework for creating 3D games, including support for graphics, input, audio, and physics.
 
 ## Dependencies
 
@@ -34,16 +34,6 @@ To build MyGame, you'll need to install CMake and a C++ compiler. Here are the s
 
 6. Run the game:
     ./bin/cpp-engine.exe
-
-## Contributing
-
-If you'd like to contribute to MyGame, please follow these steps:
-
-1. Fork the repository
-2. Create a new branch for your feature or bug fix
-3. Make your changes and commit them
-4. Push your changes to your fork
-5. Submit a pull request to the main repository
 
 ## License
 
