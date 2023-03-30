@@ -40,10 +40,22 @@ int main() {
         manager.add_listener(event_type_float, func2);
     }
 
-    auto int_payload = std::make_shared<IntPayload>(IntPayload{1,2}); 
-    auto ev = std::make_shared<Event>(event_type_int, int_payload);
+    {
+        auto int_payload = std::make_shared<IntPayload>(IntPayload{1,2}); 
+        auto ev = std::make_shared<Event>(event_type_int, int_payload);
 
-    manager.dispatch_immediately(ev);
+        manager.dispatch_immediately(ev);
+    }
+
+    {
+        auto float_payload = std::make_shared<FloatPayload>(FloatPayload{6.0f}); 
+        auto ev = std::make_shared<Event>(event_type_float, float_payload);
+
+        manager.dispatch_immediately(ev);
+    }
+
+    std::function<void(std::shared_ptr<Event> ptr)> fp = func1;
+    manager.remove_listener(event_type_int, func1);
 
     return 0;
 }

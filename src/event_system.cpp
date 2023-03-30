@@ -9,7 +9,8 @@ void EventManager::add_listener(const std::string event_type, Listener listener)
 void EventManager::remove_listener(const std::string event_type, Listener listener) {
     if(_listeners.find(event_type) != _listeners.end()) {
         auto& vec = _listeners[event_type];
-        /*for(auto it = vec.begin(); it != vec.end(); ++it) {
+        for(auto it = vec.begin(); it != vec.end(); ++it) {
+            
             if(*it == listener) {
                 vec.erase(it);
             }
@@ -19,7 +20,7 @@ void EventManager::remove_listener(const std::string event_type, Listener listen
             }
 
             break;
-        } */
+        } 
     }
 }
 
