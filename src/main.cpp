@@ -1,67 +1,99 @@
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-
 #include <iostream>
+#include <unordered_map>
+#include <string>
+#include <algorithm>
+#include <vector>
+#include <memory>
 
-// process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
-void processInput(GLFWwindow *window) {
-    if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
+
+class Event {
+    public:
+        Event(const std::string event_type, void* payload)
+         : m_event_type(event_type), m_payload(payload) {}
+
+        std::string GetType() const { return m_event_type; }
+        void* GetPayload() const { return m_payload; }
+
+    private:
+        const std::string m_event_type;
+        void* m_payload;
+};
+
+class EventManager {
+    public:
+        void add_listener(const std::string event_type, void (*listener)(Event*)) {
+            m_listeners[event_type].push_back(listener);
+        }
+
+        void remove_listener(const std::string event_type, void (*listener)(Event*)) {
+            if (m_listeners.find(event_type) != m_listeners.end()) {
+                auto& vec = m_listeners[event_type];
+                for (auto it = vec.begin(); it != vec.end(); ++it) {
+                    if (*it == listener) {
+                        vec.erase(it);
+
+                        if(vec.empty()) {
+                            m_listeners.erase(event_type);
+                        }
+
+                        break;
+                    }
+                }
+            }
+        }
+
+        void dispatch_event_immediately(Event* event) {
+            const std::string type = event->GetType();
+            if (m_listeners.find(type) != m_listeners.end()) {
+                for (auto listener : m_listeners[type]) {
+                    listener(event);
+                }
+            }
+        }
+
+    private:
+        std::unordered_map<std::string, std::vector<void (*)(Event*)>> m_listeners;
+};
+
+struct DebugOne {
+    const int x;
+    const int y;
+};
+
+struct DebugTwo {
+    const float f;
+};
+
+void func1(Event* event) {
+    const std::string type = event->GetType();
+    DebugOne* payload = static_cast<DebugOne*>(event->GetPayload());
+    std::cout << "Function one: " << type << " payload: " << payload->x << ", " << payload->y << std::endl;
 }
 
-// glfw: whenever the window size changed (by OS or user resize) this callback function executes
-void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
-    // make sure the viewport matches the new window dimensions; note that width and 
-    // height will be significantly larger than specified on retina displays.
-    glViewport(0, 0, width, height);
+void func2(Event* event) {
+    const std::string type = event->GetType();
+    DebugTwo* payload = static_cast<DebugTwo*>(event->GetPayload());
+    std::cout << "Function two: " << type << " payload: " << payload->f << std::endl;
 }
-
-// settings
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
 
 int main() {
-    // glfw: initialize and configure
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-#ifdef __APPLE__
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif
+    EventManager event_manager = EventManager();
 
-    // glfw window creation
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
-    if (window == NULL) {
-        std::cout << "Failed to create GLFW window" << std::endl;
-        glfwTerminate();
-        return -1;
-    }
-    glfwMakeContextCurrent(window);
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    DebugOne s1 {1, 2};
+    DebugTwo s2 {5.0f};
 
-    // glad: load all OpenGL function pointers
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        std::cout << "Failed to initialize GLAD" << std::endl;
-        return -1;
-    }    
+    const std::string event_type_one = "DEBUG_EVENT_ONE";
+    const std::string event_type_two = "DEBUG_EVENT_TWO";
 
-    // render loop
-    while (!glfwWindowShouldClose(window)) {
-        // input
-        processInput(window);
+    Event event_one {event_type_one, &s1};
+    Event event_two {event_type_two, &s2};
 
-        // render
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+    event_manager.add_listener(event_type_one, &func1);
+    event_manager.add_listener(event_type_two, &func2);
 
-        // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
-        glfwSwapBuffers(window);
-        glfwPollEvents();
-    }
+    event_manager.dispatch_event_immediately(&event_one);
+    event_manager.dispatch_event_immediately(&event_two);
 
-    // glfw: terminate, clearing all previously allocated GLFW resources.
-    glfwTerminate();
     return 0;
 }
