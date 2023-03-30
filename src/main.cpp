@@ -1,99 +1,49 @@
+#include "event_system.hpp"
+
 #include <iostream>
-#include <unordered_map>
-#include <string>
-#include <algorithm>
-#include <vector>
-#include <memory>
 
+using namespace Engine::Core;
 
-class Event {
-    public:
-        Event(const std::string event_type, void* payload)
-         : m_event_type(event_type), m_payload(payload) {}
-
-        std::string GetType() const { return m_event_type; }
-        void* GetPayload() const { return m_payload; }
-
-    private:
-        const std::string m_event_type;
-        void* m_payload;
-};
-
-class EventManager {
-    public:
-        void add_listener(const std::string event_type, void (*listener)(Event*)) {
-            m_listeners[event_type].push_back(listener);
-        }
-
-        void remove_listener(const std::string event_type, void (*listener)(Event*)) {
-            if (m_listeners.find(event_type) != m_listeners.end()) {
-                auto& vec = m_listeners[event_type];
-                for (auto it = vec.begin(); it != vec.end(); ++it) {
-                    if (*it == listener) {
-                        vec.erase(it);
-
-                        if(vec.empty()) {
-                            m_listeners.erase(event_type);
-                        }
-
-                        break;
-                    }
-                }
-            }
-        }
-
-        void dispatch_event_immediately(Event* event) {
-            const std::string type = event->GetType();
-            if (m_listeners.find(type) != m_listeners.end()) {
-                for (auto listener : m_listeners[type]) {
-                    listener(event);
-                }
-            }
-        }
-
-    private:
-        std::unordered_map<std::string, std::vector<void (*)(Event*)>> m_listeners;
-};
-
-struct DebugOne {
+struct IntPayload {
     const int x;
     const int y;
 };
 
-struct DebugTwo {
-    const float f;
+struct FloatPayload {
+    const float d;
 };
 
-void func1(Event* event) {
-    const std::string type = event->GetType();
-    DebugOne* payload = static_cast<DebugOne*>(event->GetPayload());
-    std::cout << "Function one: " << type << " payload: " << payload->x << ", " << payload->y << std::endl;
+void func1(std::shared_ptr<Event> event) {
+    auto payload = std::static_pointer_cast<IntPayload>(event->GetPayload());
+    std::cout << "(" << payload->x << ", " << payload->y << ")" << std::endl;
 }
 
-void func2(Event* event) {
-    const std::string type = event->GetType();
-    DebugTwo* payload = static_cast<DebugTwo*>(event->GetPayload());
-    std::cout << "Function two: " << type << " payload: " << payload->f << std::endl;
+void func2(std::shared_ptr<Event> event) {
+    auto payload = std::static_pointer_cast<FloatPayload>(event->GetPayload());
+    std::cout << "(" << payload->d << ")" << std::endl;
 }
 
 int main() {
+    
+    EventManager manager = EventManager();
 
-    EventManager event_manager = EventManager();
+    const std::string event_type_int = "EVENT_TYPE_INT";
+    const std::string event_type_float = "EVENT_TYPE_FLOAT";
 
-    DebugOne s1 {1, 2};
-    DebugTwo s2 {5.0f};
+    {
+        std::function<void(std::shared_ptr<Event> ptr)> fp = func1;
+        manager.add_listener(event_type_int, func1);
+    }
 
-    const std::string event_type_one = "DEBUG_EVENT_ONE";
-    const std::string event_type_two = "DEBUG_EVENT_TWO";
+    {
+        std::function<void(std::shared_ptr<Event> ptr)> fp = func2;
+        manager.add_listener(event_type_float, func2);
+    }
 
-    Event event_one {event_type_one, &s1};
-    Event event_two {event_type_two, &s2};
+    auto int_payload = std::make_shared<IntPayload>(IntPayload{1,2}); 
+    auto ev = std::make_shared<Event>(event_type_int, int_payload);
 
-    event_manager.add_listener(event_type_one, &func1);
-    event_manager.add_listener(event_type_two, &func2);
-
-    event_manager.dispatch_event_immediately(&event_one);
-    event_manager.dispatch_event_immediately(&event_two);
+    manager.dispatch_immediately(ev);
 
     return 0;
 }
