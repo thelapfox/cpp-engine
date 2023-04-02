@@ -8,7 +8,7 @@ namespace Engine::Core {
 
     class Event {
     public:
-        Event(const std::string type, void* payload)
+        Event(const std::string type, const void* payload)
          : _type(type), _payload(payload) {}
 
         const std::string& GetType() const { return _type; }

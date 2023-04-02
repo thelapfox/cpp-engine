@@ -20,14 +20,14 @@ struct Logging  {
 };
 
 int func1(Event& collision) {  
-    auto payload =  (Collision*) collision.GetPayload();
+    auto* payload =  (Collision*) collision.GetPayload();
     std::cout << "(" << payload->x << "," << payload->y << ")" << std::endl;
 
     return 0;
 }
 
 int func2(Event& logging) {  
-    auto payload = (Logging*) logging.GetPayload();
+    auto* payload = (Logging*) logging.GetPayload();
 
     for(auto& pair : payload->log) {
 
@@ -70,7 +70,7 @@ int main() {
 
     {
         std::string event_type = "LOGGING_COLLISION";
-        std::unordered_map<Logging::Type, std::vector<std::string>> log = {
+        const std::unordered_map<Logging::Type, std::vector<std::string>> log = {
             {Logging::Type::WARNING, {"SIGMA", "LAMBDA"}}
         };
         Logging payload = {log};
@@ -80,7 +80,7 @@ int main() {
         listeners[event_type].push_back(&func2);
     }
 
-    {
+    /*{
         std::string event_type = "EVENT_COLLISION";
         Collision payload = {1, 2};
         Event event = Event(event_type, &payload);
@@ -100,7 +100,7 @@ int main() {
             listner(event);
         }
     }
-
+*/
     for(auto& event : events) {
 
         // skip if there is no listeners for an event
