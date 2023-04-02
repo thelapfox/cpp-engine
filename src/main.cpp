@@ -1,61 +1,92 @@
 #include "event_system.hpp"
 
 #include <iostream>
+#include <vector>
+#include <unordered_map>
 
 using namespace Engine::Core;
 
-struct IntPayload {
+struct Collision  {
     const int x;
     const int y;
 };
 
-struct FloatPayload {
-    const float d;
+struct Logging  {
+    enum Type {
+        INFO, WARNING, ERROR
+    };
+
+    const std::unordered_map<Type, std::vector<std::string>> log;
 };
 
-void func1(std::shared_ptr<Event> event) {
-    auto payload = std::static_pointer_cast<IntPayload>(event->GetPayload());
-    std::cout << "(" << payload->x << ", " << payload->y << ")" << std::endl;
+int func1(Event& collision) {  
+    auto payload =  (Collision*) collision.GetPayload();
+    std::cout << "(" << payload->x << "," << payload->y << ")" << std::endl;
+
+    return 0;
 }
 
-void func2(std::shared_ptr<Event> event) {
-    auto payload = std::static_pointer_cast<FloatPayload>(event->GetPayload());
-    std::cout << "(" << payload->d << ")" << std::endl;
+int func2(Event& logging) {  
+    auto payload = (Logging*) logging.GetPayload();
+
+    for(auto& pair : payload->log) {
+
+        auto type = [pair]() -> std::string {
+            switch (pair.first) {
+                case Logging::Type::INFO : return "INFO";
+                case Logging::Type::WARNING : return "WARNING";
+                case Logging::Type::ERROR : return "ERR";
+
+                default: return "ERR";
+            }
+        };
+
+        std::string msg = "[" + type() + "]: \n";
+        for(auto& log : pair.second) {
+            msg += log + "\n";
+        }
+
+        std::cout << msg << std::endl;
+    }
+
+    return 0;
 }
 
 int main() {
-    
-    EventManager manager = EventManager();
 
-    const std::string event_type_int = "EVENT_TYPE_INT";
-    const std::string event_type_float = "EVENT_TYPE_FLOAT";
+    using Listener = int (*)(Event&);
+    std::unordered_map<std::string, std::vector<Listener>> listeners;
 
     {
-        std::function<void(std::shared_ptr<Event> ptr)> fp = func1;
-        manager.add_listener(event_type_int, func1);
+        std::string event_type = "EVENT_COLLISION";
+        listeners[event_type].push_back(&func1);
     }
 
     {
-        std::function<void(std::shared_ptr<Event> ptr)> fp = func2;
-        manager.add_listener(event_type_float, func2);
+        std::string event_type = "LOGGING_COLLISION";
+        listeners[event_type].push_back(&func2);
     }
 
     {
-        auto int_payload = std::make_shared<IntPayload>(IntPayload{1,2}); 
-        auto ev = std::make_shared<Event>(event_type_int, int_payload);
-
-        manager.dispatch_immediately(ev);
+        std::string event_type = "EVENT_COLLISION";
+        Collision payload = {1, 2};
+        Event event = Event(event_type, &payload);
+        for(auto& listner : listeners[event_type]) {
+            listner(event);
+        }
     }
 
     {
-        auto float_payload = std::make_shared<FloatPayload>(FloatPayload{6.0f}); 
-        auto ev = std::make_shared<Event>(event_type_float, float_payload);
-
-        manager.dispatch_immediately(ev);
+        std::string event_type = "LOGGING_COLLISION";
+        std::unordered_map<Logging::Type, std::vector<std::string>> log = {
+            {Logging::Type::INFO, {"ONE", "TWO", "THREE"}}
+        };
+        Logging payload = {log};
+        Event event = Event(event_type, &payload);
+        for(auto& listner : listeners[event_type]) {
+            listner(event);
+        }
     }
-
-    std::function<void(std::shared_ptr<Event> ptr)> fp = func1;
-    manager.remove_listener(event_type_int, func1);
 
     return 0;
 }

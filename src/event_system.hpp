@@ -1,40 +1,39 @@
 #ifndef EVENT_SYSTEM_
 #define EVENT_SYSTEM_
 
-#include <memory>
 #include <string>
-#include <functional>
-#include <unordered_map>
 
-namespace Engine {
-    namespace Core {
 
-        class Event {
-            public:
-                Event(const std::string event_type, std::shared_ptr<void> event_payload)
-                : _type(event_type), _payload(event_payload) {}
+namespace Engine::Core {
 
-                std::string GetType() const { return _type; }
-                std::shared_ptr<void> GetPayload() const { return _payload; }
+    class Event {
+    public:
+        Event(const std::string type, void* payload)
+         : _type(type), _payload(payload) {}
 
-            private:
-                const std::string _type;
-                std::shared_ptr<void> _payload;
-        };
+        const std::string& GetType() const { return _type; }
+        const void* GetPayload() const { return _payload; }
 
-        class EventManager {
-            using Listener = std::function<void(std::shared_ptr<Event> ptr)>;
-            public:
-                void add_listener(const std::string event_type, Listener listener);
-                void remove_listener(const std::string event_type, Listener listener);
+        bool GetFlag() const { return _flag; }
+        void SetFlag(bool flag) { _flag = flag; }
 
-                void dispatch_immediately(const std::shared_ptr<Event> event);
+    private:
+        const std::string _type;
+        const void* _payload;
 
-            private:
-                std::unordered_map<std::string, std::vector<Listener>> _listeners;
-        };
+        bool _flag;
+    };
 
-    }
+    /*class EventManager {
+    
+    
+
+    public:
+
+    private:
+        std::unordered_map<>
+    };*/
+
 }
 
 
