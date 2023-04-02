@@ -55,15 +55,28 @@ int func2(Event& logging) {
 int main() {
 
     using Listener = int (*)(Event&);
+    
+    std::vector<Event> events;
     std::unordered_map<std::string, std::vector<Listener>> listeners;
 
     {
         std::string event_type = "EVENT_COLLISION";
+        Collision payload = {9, 10};
+        Event event = Event(event_type, &payload);
+        events.push_back(event);
+
         listeners[event_type].push_back(&func1);
     }
 
     {
         std::string event_type = "LOGGING_COLLISION";
+        std::unordered_map<Logging::Type, std::vector<std::string>> log = {
+            {Logging::Type::WARNING, {"SIGMA", "LAMBDA"}}
+        };
+        Logging payload = {log};
+        Event event = Event(event_type, &payload);
+        events.push_back(event);
+
         listeners[event_type].push_back(&func2);
     }
 
@@ -86,6 +99,19 @@ int main() {
         for(auto& listner : listeners[event_type]) {
             listner(event);
         }
+    }
+
+    for(auto& event : events) {
+
+        // skip if there is no listeners for an event
+        auto& type = event.GetType();
+        if(listeners.find(type) == listeners.end()) { continue; }
+
+        // call functions
+        for(auto& listener : listeners[type]) {
+            listener(event);
+        }
+
     }
 
     return 0;
