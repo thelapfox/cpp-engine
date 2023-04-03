@@ -8,6 +8,7 @@
 #include <sstream>
 #include <ctime>
 
+#include <lua/lua.hpp>
 
 enum EventType {
     LOGGING, COLLISION
@@ -47,11 +48,11 @@ public:
     void Unsubscribe(EventType type, Observer observer) {
         if(_subscribers.find(type) == _subscribers.end()) { return; }
 
-        auto& vec = _subscribers[type];
+        /*auto& vec = _subscribers[type];
         vec.erase(
             std::remove(vec.begin(), vec.end(), observer),
             vec.end()
-        );
+        );*/
     }
 
     void AddEvent(const Event& event) {
@@ -142,7 +143,21 @@ public:
     }
 };
 
+
 int main() {
+    // Create a new Lua state object
+    lua_State* L = luaL_newstate();
+    luaL_openlibs(L);
+
+    // Load and execute a Lua script from a file
+    if(luaL_loadfile(L, "../scripts/main.lua") || lua_pcall(L, 0, 0, 0)) {
+        // Print an error message if the script fails to load or execute
+        const char* errorMessage = lua_tostring(L, -1);
+        printf("Error loading script: %s\n", errorMessage);
+    }
+
+    // Close the Lua state object and free any resources
+    lua_close(L);
 
     Manager manager;
 

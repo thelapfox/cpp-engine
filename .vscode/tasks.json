@@ -13,7 +13,7 @@
                 "-pedantic",
 				"-I${workspaceFolder}/include",
 				"-L${workspaceFolder}/lib",
-				"-lopengl32", "-lglfw3",
+				"-lopengl32", "-lglfw3", "-llua54",
 				"${workspaceFolder}/src/*.cpp",
 				"${workspaceFolder}/resources/*",
 				"-o",
