@@ -2,73 +2,59 @@
 #define EVENT_SYSTEM_
 
 #include <string>
+#include <memory>
 #include <vector>
 #include <unordered_map>
+#include <algorithm>
 
 
 using namespace std;
-
 namespace Engine::Core {
 
-    class Event {
-    public:
-        Event(const string type, const void* payload)
-         : _type(type), _payload(payload) {}
 
-        const string& GetType() const { return _type; }
-        const void* GetPayload() const { return _payload; }
+class Event {
+public:
+    Event(const string& type, const std::shared_ptr<void> payload) : _type(type), _payload(payload) {}
 
-        bool GetFlag() const { return _flag; }
-        void SetFlag(bool flag) { _flag = flag; }
+    const string& GetType() const { return _type; }
+    const std::shared_ptr<void> GetPayload() const { return _payload; }
 
-    private:
-        const string _type;
-        const void* _payload;
+    void SetFlag(bool flag) { _flag = flag; }
+    const bool& GetFlag() const { return _flag; }
 
-        bool _flag;
-    };
+private:
+    const string _type;
+    const std::shared_ptr<void> _payload;
 
-    class EventManager {
-    
-        using Listener = int (*)(const Event&);
+    bool _flag;
+};
 
-    public:
-        void AddListener(const string type, Listener listener) {
-            listeners[type].push_back(listener);
-        }
+class IObserver {
+public:
+    virtual void onNotify(const Event& event) = 0;
+};
 
-        void AddEvent(const Event& event) {
-            events.push_back(event);
-        }
+class Manager {
 
-        void DispatchImmediately(const Event& event) {
-            // skip if there is no listeners for an event
-            auto& type = event.GetType();
-            if(listeners.find(type) == listeners.end()) { return; }
+    using Observer = std::shared_ptr<IObserver>;
 
-            // call functions
-            for(auto& listener : listeners[type]) {
-                listener(event);
-            }
-        }
+public:
+    void Subscribe(const string type, Observer observer);
 
-        void DispatchEvents() {
-            for(auto& event : events) {
+    void Unsubscribe(const string type, Observer observer);
 
-                // skip if there is no listeners for an event
-                auto& type = event.GetType();
-                if(listeners.find(type) == listeners.end()) { continue; }
+    void AddEvent(const Event& event);
 
-                DispatchImmediately(event);
-            }
-        }
+    void DispatchImmediately(const Event& event);
 
-    private:
-        vector<Event> events;
-        unordered_map<string, vector<Listener>> listeners;
-    };
+    void Dispatch();
 
-}
+private:
+    std::vector<Event> _events;
+    std::unordered_map<string, std::vector<Observer>> _subscribers;
+};    
+
+};
 
 
 #endif  // EVENT_SYSTEM_
